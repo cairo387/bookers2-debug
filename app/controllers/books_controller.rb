@@ -1,11 +1,15 @@
 class BooksController < ApplicationController
-
+  before_action :ensure_correct_user, only: [:update, :edit, :destroy]
+  
   def show
     @book = Book.find(params[:id])
+    @new_book = Book.new
+    @user = @book.user
   end
 
   def index
     @books = Book.all
+    @book = Book.new
   end
 
   def create
@@ -34,16 +38,22 @@ class BooksController < ApplicationController
     end
   end
 
-  def delete
+  def destroy
     @book = Book.find(params[:id])
-    @book.destoy
+    @book.destroy
     redirect_to books_path
   end
 
   private
-
-  def book_params
-    params.require(:book).permit(:title)
+  
+  def ensure_correct_user
+    @book = Book.find(params[:id])
+    return if @book.user_id == current_user.id
+    flash[:danger] = '権限がありません'
+    redirect_to books_path
   end
 
+  def book_params
+    params.require(:book).permit(:title, :body)
+  end
 end
